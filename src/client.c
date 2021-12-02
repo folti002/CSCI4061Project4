@@ -7,8 +7,7 @@ void printSyntax(){
 
 int main(int argc, char *argv[]){
     // argument handling
-    if(argc != 4)
-    {
+    if(argc != 4){
         printSyntax();
         return 0;
     }

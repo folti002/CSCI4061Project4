@@ -21,8 +21,7 @@
 #define LOGGER_SLEEP 5     // time in between logging for the log thread (decreased from 30 seconds, as that was excessive)
 
 /*  DO NOT MODIFY */
-typedef enum
-{
+typedef enum{
 	REGISTER,
 	GET_ACCOUNT_INFO,
 	TRANSACT,
