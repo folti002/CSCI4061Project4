@@ -31,7 +31,7 @@ int main(int argc, char *argv[]){
     }
     
     // sleep to let the server start
-    sleep(1);
+    sleep(10);
 
     unsigned char c = 4;
     char name[10];
