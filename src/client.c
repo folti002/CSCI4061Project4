@@ -6,11 +6,14 @@ void printSyntax(){
 }
 
 int main(int argc, char *argv[]){
-    // argument handling
+    // Argument handling
     if(argc != 4){
         printSyntax();
         return 0;
     }
+
+    clock_t time;
+    time = clock();
 
     return 0; 
 }
