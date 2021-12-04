@@ -9,8 +9,8 @@ folti002 and fazen007
 ## Division of Labor
 
 Similar to the last projects, we will be working closely together throughout. We will split things up generally as follows:  
-Mikkel: Creating threads, setting up shared queue, and producer thread  
-Reed: Reading data from queue in consumer, writing to shared data structures, and synchronization  
+Mikkel: Creating worker threads, server-side logic to handle requests, maintaining global balance array, serialization  
+Reed: Reading from files in client, client-side logic with request-handling, maintaining client's store of cash  
 
 ## Terminal Screenshot
 
