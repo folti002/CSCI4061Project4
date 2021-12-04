@@ -7,7 +7,7 @@ INCLDIR=include
 LIBDIR=lib
 
 LOCALADDR=127.0.0.1
-PORT=42069 #edit this with your own port number
+PORT=9464#edit this with your own port number
 
 launcher: $(SRCDIR)/launcher.c $(LIBDIR)/utils.o client server
 	$(CC) $(CLINK) $(CFLAGS) -I$(INCLDIR) $(LIBDIR)/utils.o $(SRCDIR)/launcher.c -o launcher

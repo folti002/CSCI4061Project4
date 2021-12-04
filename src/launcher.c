@@ -27,7 +27,7 @@ int main(int argc, char *argv[]){
     }
     
     // sleep to let the server start
-    sleep(10);
+    sleep(5);
 
     unsigned char c = 4;
     char name[10];
@@ -53,7 +53,7 @@ int main(int argc, char *argv[]){
     }
 
     // sleep to let the server experience a log action
-    sleep(31);
+    sleep(10);
 
     // send terminate signal to the server
     if((kill(server_pid, SIGTERM))== -1){
