@@ -21,20 +21,21 @@
 #define LOGGER_SLEEP 5     // time in between logging for the log thread (decreased from 30 seconds, as that was excessive)
 
 /*  DO NOT MODIFY */
-typedef enum{
-	REGISTER,
-	GET_ACCOUNT_INFO,
-	TRANSACT,
-	GET_BALANCE,
-	ACCOUNT_INFO,
-	BALANCE,
-	REQUEST_CASH,
-	CASH,
-	ERROR,
-	TERMINATE,
+typedef enum
+{
+	REGISTER,         // 0
+	GET_ACCOUNT_INFO, // 1
+	TRANSACT,         // 2
+	GET_BALANCE,      // 3 
+	ACCOUNT_INFO,     // 4
+	BALANCE,          // 5
+	REQUEST_CASH,     // 6
+	CASH,             // 7
+	ERROR,            // 8
+	TERMINATE,        // 9
 	/* extra credit messages */
-	REQUEST_HISTORY,
-	HISTORY,
+	REQUEST_HISTORY,  // 10
+	HISTORY,          // 11
 }msg_enum;
 
 /* file I/O */

@@ -1,6 +1,7 @@
 CC = gcc
 CFLAGS = -g
-CLINK = -lpthread
+#CLINK = -lpthread
+CLINK = -pthread
 
 SRCDIR=src
 INCLDIR=include
