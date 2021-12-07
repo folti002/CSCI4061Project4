@@ -20,8 +20,7 @@ const char* const msg_str[] =
 };
 
 // logic for handling TRANSACT
-void transact(int acc_num, float val)
-{
+void transact(int acc_num, float val){
     // send a GET_BALANCE message to the server to ensure
     // that the account will not go negative
 
@@ -37,8 +36,7 @@ void transact(int acc_num, float val)
 }
 
 // and then reading a server's responding message
-void get_account_info(int sock_fd)
-{
+void get_account_info(int sock_fd){
     // integer to hold number of bytes read/written
     int amt = 0;
 
@@ -56,15 +54,13 @@ void get_account_info(int sock_fd)
     // but will be the simplest for you to use
     //
     // write the message type first
-    if((amt=write(sock_fd, &msg_type, sizeof(msg_enum))) != sizeof(msg_enum))
-    {
+    if((amt=write(sock_fd, &msg_type, sizeof(msg_enum))) != sizeof(msg_enum)){
         printf("get_account_info failed to write msg_type\n.");
         printf("It wrote %d bytes\n.", amt);
         exit(1);
     }
     // write the arguments for the message type
-    if((amt=write(sock_fd, &acc_num, sizeof(int))) != sizeof(int))
-    {
+    if((amt=write(sock_fd, &acc_num, sizeof(int))) != sizeof(int)){
         printf("get_account_info failed to write acc_num\n.");
         printf("It wrote %d bytes\n.", amt);
         exit(1);
@@ -73,35 +69,30 @@ void get_account_info(int sock_fd)
     // read in the response message type first
     // as this tells us what fields we will need
     // to read afterwards and their types
-    if((amt=read(sock_fd, &rsp_type, sizeof(msg_enum))) != sizeof(msg_enum))
-    {
+    if((amt=read(sock_fd, &rsp_type, sizeof(msg_enum))) != sizeof(msg_enum)){
         printf("get_account_info failed to read rsp_type\n.");
         printf("It read %d bytes\n.", amt);
         exit(1);
     }
     // handle us getting the wrong value back
-    else if(rsp_type != ACCOUNT_INFO)
-    {
+    else if(rsp_type != ACCOUNT_INFO){
         printf("get_account_info recieved wrong rsp_type\n");
         exit(1);
     }
     // get the username
-    if((amt=read(sock_fd, &username, sizeof(char)*MAX_STR)) < 1)
-    {
+    if((amt=read(sock_fd, &username, sizeof(char)*MAX_STR)) < 1){
         printf("get_account_info failed to read username\n.");
         printf("It read %d bytes\n.", amt);
         exit(1);
     }
     // get the name
-    if((amt=read(sock_fd, &name, sizeof(char)*MAX_STR)) < 1)
-    {
+    if((amt=read(sock_fd, &name, sizeof(char)*MAX_STR)) < 1){
         printf("get_account_info failed to read name\n.");
         printf("It read %d bytes\n.", amt);
         exit(1);
     }
     // get the birthday
-    if((amt=read(sock_fd, &birthday, sizeof(time_t))) != sizeof(time_t))
-    {
+    if((amt=read(sock_fd, &birthday, sizeof(time_t))) != sizeof(time_t)){
         printf("get_account_info failed to read birthday\n.");
         printf("It read %d bytes\n.", amt);
         exit(1);
