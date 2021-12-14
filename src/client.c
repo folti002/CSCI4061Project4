@@ -16,22 +16,22 @@ REQUEST_HISTORY (10)
 */
 
 
-const char* const msg_str[] = 
-{
-	"REGISTER",
-	"GET_ACCOUNT_INFO",
-	"TRANSACT",
-	"GET_BALANCE",
-	"ACCOUNT_INFO",
-	"BALANCE",
-	"REQUEST_CASH",
-	"CASH",
-	"ERROR",
-	"TERMINATE",
-	/* extra credit messages */
-	"REQUEST_HISTORY",
-	"HISTORY",
-};
+// const char* const msg_str[] = 
+// {
+// 	"REGISTER",
+// 	"GET_ACCOUNT_INFO",
+// 	"TRANSACT",
+// 	"GET_BALANCE",
+// 	"ACCOUNT_INFO",
+// 	"BALANCE",
+// 	"REQUEST_CASH",
+// 	"CASH",
+// 	"ERROR",
+// 	"TERMINATE",
+// 	/* extra credit messages */
+// 	"REQUEST_HISTORY",
+// 	"HISTORY",
+// };
 
 // logic for handling TRANSACT
 void transact(int acc_num, float val){

@@ -11,24 +11,22 @@ ERROR (8) - Sending this message to a client, when the server receives a message
 - HISTORY (11)
 */
 
-
-
-const char* const msg_str[] = 
-{
-	"REGISTER",
-	"GET_ACCOUNT_INFO",
-	"TRANSACT",
-	"GET_BALANCE",
-	"ACCOUNT_INFO",
-	"BALANCE",
-	"REQUEST_CASH",
-	"CASH",
-	"ERROR",
-	"TERMINATE",
-	/* extra credit messages */
-	"REQUEST_HISTORY",
-	"HISTORY",
-};
+// const char* const msg_str[] = 
+// {
+// 	"REGISTER",
+// 	"GET_ACCOUNT_INFO",
+// 	"TRANSACT",
+// 	"GET_BALANCE",
+// 	"ACCOUNT_INFO",
+// 	"BALANCE",
+// 	"REQUEST_CASH",
+// 	"CASH",
+// 	"ERROR",
+// 	"TERMINATE",
+// 	/* extra credit messages */
+// 	"REQUEST_HISTORY",
+// 	"HISTORY",
+// };
 
 void printSyntax(){
     printf("incorrect usage syntax! \n");
