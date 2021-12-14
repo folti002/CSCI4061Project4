@@ -2,6 +2,20 @@
 
 #define SA struct sockaddr
 
+
+/*
+CLIENT NEEDS TO SEND:
+REGISTER (0)
+GET_ACCOUNT_INFO (1)
+TRANSACT (2)
+GET_BALANCE (3)
+REQUEST_CASH (6)
+ERROR (8) - sent when client receives an unexpected response from the server. After sending this message to server, clients close the connection. 
+TERMINATE (9) : Sending this message type (4 bytes) without any additional data
+REQUEST_HISTORY (10)
+*/
+
+
 const char* const msg_str[] = 
 {
 	"REGISTER",
@@ -111,16 +125,18 @@ int main(int argc, char *argv[]){
         return 0;
     }
 
+    // TODO: RECORD TIME OF START
+    // time = clock.now; or something like that
+
     // Read in command-line arguments
     char* inputFileName = argv[1];
     char* serverIP = argv[2];
     int serverPort = atoi(argv[3]);
 
     char* clientStr = "(CLIENT)";
-    //printf("%s %s %s %d\n", clientStr, inputFileName, serverIP, serverPort);
 
     // Create socket and validate
-    int sockfd, connfd;
+    int sockfd;
     struct sockaddr_in servaddr, cli;
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if(sockfd == -1){
@@ -144,28 +160,83 @@ int main(int argc, char *argv[]){
         printf("%s Connected to the server!\n", clientStr);
     }
 
+
+    // Open a file and return file pointer to the file
+    FILE* fp;
+    char *line = (char *)malloc(sizeof(char) * MAX_STR);
+    size_t len = MAX_STR;
+    ssize_t nread;
+    if((fp = getFilePointer(inputFileName)) == NULL) {
+        printf("Unable to open file: %s\n Exiting...\n", inputFileName);
+        exit(EXIT_FAILURE);
+    }
+    
+    // Set up variables to be read in during each read from the file
+    int msg;
+    int accountNumber;
+    char name[MAX_STR];
+    char username[MAX_STR];
+    time_t birthday;
+    float amount;
+    int numTransactions;
+
+    // Start reading from input file
+    while((nread = getLineFromFile(fp, line, len)) != -1) {
+        sscanf(line, "%d,%d,%s,%s,%ld,%f,%d\n", 
+                &msg, &accountNumber, name, username, 
+                &birthday, &amount, &numTransactions);
+        printf("%d,%d,%s,%s,%ld,%f,%d\n", 
+                msg, accountNumber, name, username, 
+                birthday, amount, numTransactions);
+
+        // Depending on which command was read in, make request to server
+        if(msg == REGISTER){
+
+        } else if(msg == GET_ACCOUNT_INFO){
+
+        } else if(msg == TRANSACT){
+
+        } else if(msg == GET_BALANCE){
+
+        } else if(msg == REQUEST_CASH){
+
+        } else if(msg == ERROR){
+
+        } else if(msg == TERMINATE){
+
+        } else if(msg == REQUEST_HISTORY){
+
+        } else {
+            // ERROR
+        }
+    }
+
+    // TODO: PRINT OUT ELAPSED TIME AFTER CLIENT IS DONE RUNNING
+    //printf("%s Elapsed Time: %.2f\n", clientStr, time);
+
+    free(line);
+
     // INTERIM SUBMISSION
     // Send each enum to the server
-    for(int i = REGISTER; i <= TERMINATE; i++){
-        // Write current enum to the server
-        char enumAsStr[sizeof(int)];
-        sprintf(enumAsStr, "%d", i);
-        if(write(sockfd, enumAsStr, strlen(enumAsStr)) < 0){
-            perror("Failed to write");
-            exit(1);
-        }
-        // printf("%s Enum %d sent to server.\n", clientStr, i);
-
-        // Read server response
-        char recv[sizeof(int)];
-        memset(recv, 0, sizeof(int));
-        if(read(sockfd, recv, sizeof(int)) < 0){
-            perror("Failed to read");
-            exit(1);
-        }
-        int enumVal = atoi(recv);
-        printf("%s %s: %d\n", clientStr, msg_str[enumVal], enumVal);
-    }
+    // for(int i = REGISTER; i <= TERMINATE; i++){
+    //     // Write current enum to the server
+    //     char enumAsStr[sizeof(int)];
+    //     sprintf(enumAsStr, "%d", i);
+    //     if(write(sockfd, enumAsStr, strlen(enumAsStr)) < 0){
+    //         perror("Failed to write");
+    //         exit(1);
+    //     }
+    //     // printf("%s Enum %d sent to server.\n", clientStr, i);
+    //     // Read server response
+    //     char recv[sizeof(int)];
+    //     memset(recv, 0, sizeof(int));
+    //     if(read(sockfd, recv, sizeof(int)) < 0){
+    //         perror("Failed to read");
+    //         exit(1);
+    //     }
+    //     int enumVal = atoi(recv);
+    //     printf("%s %s: %d\n", clientStr, msg_str[enumVal], enumVal);
+    // }
 
     close(sockfd);
 

@@ -13,7 +13,9 @@
 // for maintaining synchronization among threads
 struct account
 {
-
+  char username[MAX_STR];
+  char name[MAX_STR];
+  time_t birthday;
 };
 
 // array of structs to store account information

@@ -2,6 +2,17 @@
 
 #define SA struct sockaddr
 
+/*
+SERVER NEEDS TO SEND:
+ACCOUNT_INFO (4) - After clients receive this message, they do nothing.
+BALANCE (5)
+CASH (7)
+ERROR (8) - Sending this message to a client, when the server receives a message not defined in enum. Clients do nothing when they receive ERROR.
+- HISTORY (11)
+*/
+
+
+
 const char* const msg_str[] = 
 {
 	"REGISTER",
@@ -22,6 +33,14 @@ const char* const msg_str[] =
 void printSyntax(){
     printf("incorrect usage syntax! \n");
     printf("usage: $ ./server server_addr server_port num_workers\n");
+}
+
+void logThread(){
+    while(1){
+
+
+        sleep(LOGGER_SLEEP);
+    }
 }
 
 int main(int argc, char *argv[]){
@@ -80,44 +99,52 @@ int main(int argc, char *argv[]){
 
     // FOR INTERIM SOLUTION
     pthread_t pid;
-    int connfd_arr; // CONVERT TO ARRAY
-
-    connfd_arr = accept(sockfd, (SA*) &cli, &len);
-    if(connfd_arr < 0){
-        printf("%s Server accept failed!\n", serverStr);
-        exit(0);
-    } else {
-        printf("%s Server has accepted the client!\n", serverStr);
-    }
+    int connfd;
 
     while(1){
+        connfd = accept(sockfd, (SA*) &cli, &len);
+        if(connfd < 0){
+            printf("%s Server accept failed!\n", serverStr);
+            exit(0);
+        } else {
+            printf("%s Server has accepted the client!\n", serverStr);
+        }
+
         char msg[sizeof(int)];
         memset(msg, 0, sizeof(int));
-        int size = read(connfd_arr, msg, sizeof(msg));
+        int size = read(connfd, msg, sizeof(msg));
         if(size < 0){
             perror("Read error");
             exit(1);
         }
-        int enumVal = atoi(msg);
-        printf("%s %s: %d\n", serverStr, msg_str[enumVal], enumVal);
-
-        char enumAsStr[sizeof(int)];
-        sprintf(enumAsStr, "%d", enumVal);
-        if(write(connfd_arr, enumAsStr, strlen(enumAsStr)) < 0){
-            perror("Failed to write");
-            exit(1);
-        }
-
-        if(strcmp(msg_str[enumVal], "TERMINATE") == 0){
-            break;
-        }
     }
+
+    // while(1){
+    //     char msg[sizeof(int)];
+    //     memset(msg, 0, sizeof(int));
+    //     int size = read(connfd, msg, sizeof(msg));
+    //     if(size < 0){
+    //         perror("Read error");
+    //         exit(1);
+    //     }
+    //     int enumVal = atoi(msg);
+    //     printf("%s %s: %d\n", serverStr, msg_str[enumVal], enumVal);
+    //     char enumAsStr[sizeof(int)];
+    //     sprintf(enumAsStr, "%d", enumVal);
+    //     if(write(connfd, enumAsStr, strlen(enumAsStr)) < 0){
+    //         perror("Failed to write");
+    //         exit(1);
+    //     }
+    //     if(strcmp(msg_str[enumVal], "TERMINATE") == 0){
+    //         break;
+    //     }
+    // }
 
     close(sockfd);
 
     /*
     while(1){
-        connfd_arr[count%]
+        connfd[count%]
     }
     */
 
