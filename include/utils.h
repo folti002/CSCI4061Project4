@@ -13,6 +13,7 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <arpa/inet.h>
+#include <time.h>
 
 #define MAX_STR 64         // maximum possible string length for names/usernames
 #define MAX_ACC 1023       // maximum amount of accounts server.c will be storing

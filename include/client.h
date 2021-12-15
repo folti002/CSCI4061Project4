@@ -5,6 +5,7 @@
 
 // track the cash available to service transactions
 float cash = START_CASH;
+char* clientStr = "(CLIENT)";
 
 void printSyntax();
 

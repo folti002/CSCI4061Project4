@@ -16,12 +16,15 @@ struct account
   char username[MAX_STR];
   char name[MAX_STR];
   time_t birthday;
+  pthread_mutex_t accountLock;
 };
 
 // array of structs to store account information
 struct account balances[MAX_ACC];
 // ALT: you may declare it as a pointer and malloc
 // struct account * balances;
+
+char* serverStr = "(SERVER)";
 
 void printSyntax();
 
