@@ -8,25 +8,33 @@ ACCOUNT_INFO (4) - After clients receive this message, they do nothing.
 BALANCE (5)
 CASH (7)
 ERROR (8) - Sending this message to a client, when the server receives a message not defined in enum. Clients do nothing when they receive ERROR.
-- HISTORY (11)
+HISTORY (11)
 */
 
-// const char* const msg_str[] = 
-// {
-// 	"REGISTER",
-// 	"GET_ACCOUNT_INFO",
-// 	"TRANSACT",
-// 	"GET_BALANCE",
-// 	"ACCOUNT_INFO",
-// 	"BALANCE",
-// 	"REQUEST_CASH",
-// 	"CASH",
-// 	"ERROR",
-// 	"TERMINATE",
-// 	/* extra credit messages */
-// 	"REQUEST_HISTORY",
-// 	"HISTORY",
-// };
+// Logic for sending ACCOUNT_INFO
+void account_info(int connfd, char username[MAX_STR], char name[MAX_STR]){
+    printf("%s Account_info protocol\n", serverStr);
+}
+
+// Logic for sending BALANCE
+void balance(int connfd, int accountNumber, float balance){
+    printf("%s Balance protocol\n", serverStr);
+}
+
+// Logic for sending CASH
+void cash(int connfd, float cash){
+    printf("%s Cash protocol\n", serverStr);
+}
+
+// Logic for sending ERROR
+void error(int connfd){
+    printf("%s Error protocol\n", serverStr);
+}
+
+// Logic for sending HISTORY
+void history(int connfd){
+    printf("%s History protocol\n", serverStr);
+}
 
 void printSyntax(){
     printf("incorrect usage syntax! \n");
@@ -35,10 +43,38 @@ void printSyntax(){
 
 void logThread(){
     while(1){
-
-
         sleep(LOGGER_SLEEP);
+
     }
+}
+
+void* requestHandler(void* connfd){
+    int size = 0;
+    int msg;
+    int* connectionfd = (int*) connfd;
+    if((size = read(*connectionfd, &msg, sizeof(int))) != sizeof(int)){
+        printf("%s failed to read message type from client\n", serverStr);
+    }
+
+    // if(msg == REGISTER){
+        
+    // } else if(msg == GET_ACCOUNT_INFO){
+
+    // } else if(msg == TRANSACT){
+
+    // } else if(msg == GET_BALANCE){
+
+    // } else if(msg == REQUEST_CASH){
+
+    // } else if(msg == ERROR){    
+
+    // } else if(msg == TERMINATE){
+
+    // } else if(msg == REQUEST_HISTORY){
+
+    // } else {
+    //     printf("%s Invalid message type read from client!\n", serverStr);
+    // }
 }
 
 int main(int argc, char *argv[]){
@@ -56,11 +92,7 @@ int main(int argc, char *argv[]){
     int port = atoi(argv[2]);
     int numWorkers = atoi(argv[3]);
 
-    char* serverStr = "(SERVER)";
     //printf("%s %s %d %d\n", serverStr, IPaddress, port, numWorkers);
-
-    // Create empty output folder
-    bookeepingCode();
 
     // Create socket and validate
     int sockfd, len;
@@ -78,6 +110,13 @@ int main(int argc, char *argv[]){
     servaddr.sin_family = AF_INET;
     servaddr.sin_addr.s_addr = inet_addr(IPaddress);
     servaddr.sin_port = htons(port);
+
+    // This is to prevent a bind failing when running the program many times in a row
+    int enable = 1;
+    if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0){
+        printf("%s setsockopt(SO_REUSEADDR) failed\n", serverStr);
+        exit(1);
+    }
 
     // Bind newly created socket to the inputted IP address
     if((bind(sockfd, (SA*) &servaddr, sizeof(servaddr))) != 0){
@@ -100,52 +139,24 @@ int main(int argc, char *argv[]){
     int connfd;
 
     while(1){
-        connfd = accept(sockfd, (SA*) &cli, &len);
-        if(connfd < 0){
+        int* connfd = malloc(sizeof(int));
+        *connfd = accept(sockfd, (SA*) &cli, &len);
+        if(*connfd < 0){
             printf("%s Server accept failed!\n", serverStr);
             exit(0);
         } else {
             printf("%s Server has accepted the client!\n", serverStr);
         }
 
-        char msg[sizeof(int)];
-        memset(msg, 0, sizeof(int));
-        int size = read(connfd, msg, sizeof(msg));
-        if(size < 0){
-            perror("Read error");
+        pthread_t worker_tid;
+        if(pthread_create(&worker_tid, NULL, requestHandler, (void*) connfd) != 0){
+            printf("%s Worker thread failed to create\n", serverStr);
             exit(1);
         }
+        pthread_detach(worker_tid);
     }
-
-    // while(1){
-    //     char msg[sizeof(int)];
-    //     memset(msg, 0, sizeof(int));
-    //     int size = read(connfd, msg, sizeof(msg));
-    //     if(size < 0){
-    //         perror("Read error");
-    //         exit(1);
-    //     }
-    //     int enumVal = atoi(msg);
-    //     printf("%s %s: %d\n", serverStr, msg_str[enumVal], enumVal);
-    //     char enumAsStr[sizeof(int)];
-    //     sprintf(enumAsStr, "%d", enumVal);
-    //     if(write(connfd, enumAsStr, strlen(enumAsStr)) < 0){
-    //         perror("Failed to write");
-    //         exit(1);
-    //     }
-    //     if(strcmp(msg_str[enumVal], "TERMINATE") == 0){
-    //         break;
-    //     }
-    // }
 
     close(sockfd);
 
-    /*
-    while(1){
-        connfd[count%]
-    }
-    */
-
     return 0; 
 }
-
