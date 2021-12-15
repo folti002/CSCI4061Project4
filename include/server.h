@@ -13,6 +13,8 @@
 // for maintaining synchronization among threads
 struct account
 {
+  int accountNumber;
+  float balance;
   char username[MAX_STR];
   char name[MAX_STR];
   time_t birthday;
@@ -25,6 +27,7 @@ struct account balances[MAX_ACC];
 // struct account * balances;
 
 char* serverStr = "(SERVER)";
+char* logFileName = "output/balances.csv";
 
 void printSyntax();
 
