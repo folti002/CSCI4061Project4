@@ -2,18 +2,6 @@
 
 #define SA struct sockaddr
 
-/*
-CLIENT NEEDS TO SEND:
-REGISTER (0)
-GET_ACCOUNT_INFO (1)
-TRANSACT (2)
-GET_BALANCE (3)
-REQUEST_CASH (6)
-ERROR (8) - sent when client receives an unexpected response from the server. After sending this message to server, clients close the connection. 
-TERMINATE (9) : Sending this message type (4 bytes) without any additional data
-REQUEST_HISTORY (10)
-*/
-
 // logic for sending REGISTER request
 void registerRequest(int sockfd, char username[MAX_STR], char name[MAX_STR], time_t birthday){
     printf("%s Register request\n", clientStr);
@@ -60,8 +48,8 @@ void registerRequest(int sockfd, char username[MAX_STR], char name[MAX_STR], tim
         exit(1);
     }
     // handle us getting the wrong value back
-    else if(rsp_type != ACCOUNT_INFO){
-        printf("%s register recieved wrong rsp_type\n", clientStr);
+    else if(rsp_type != BALANCE){
+        printf("%s register recieved wrong rsp_type %d\n", clientStr, rsp_type);
         exit(1);
     }
     if((amt=read(sockfd, &accountNumber, sizeof(int))) != sizeof(int)){
@@ -147,23 +135,128 @@ void get_account_info(int sock_fd, int accountNumber){
     printf("%s Name: %s, Username: %s, Birthday: %ld\n", clientStr, name, username, birthday);
 }
 
-// logic for handling TRANSACT
+// logic for sending REQUEST_CASH request
+void request_cash(int sockfd){
+    printf("Request_cash request\n");
+
+    // Integer to hold number of bytes read/written
+    int amt = 0;
+
+    // Variables to write to socket
+    int msg = REQUEST_CASH;
+    float cashRequest = CASH_AMOUNT;
+    
+    // Variables to store response
+    int rsp;
+    float cashReturned;
+
+    // Write message type
+    if((amt=write(sockfd, &msg, sizeof(int))) != sizeof(int)){
+        printf("%s request_cash failed to write msg_type\n.", clientStr);
+        printf("It wrote %d bytes\n.", amt);
+        exit(1);
+    }
+    // Write argument for message type
+    if((amt=write(sockfd, &cashRequest, sizeof(float))) != sizeof(float)){
+        printf("%s request_cash failed to write cashRequest\n.", clientStr);
+        printf("It wrote %d bytes\n.", amt);
+        exit(1);
+    }
+
+
+
+    // Read in response message type
+    if((amt=read(sockfd, &rsp, sizeof(int))) != sizeof(int)){
+        printf("%s request_cash failed to read rsp\n.", clientStr);
+        printf("It wrote %d bytes\n.", amt);
+        exit(1);
+    }
+    // What if we get wrong value back?
+    else if(rsp != CASH){
+        printf("%s request_cash received the wrong response type\n", clientStr);
+        exit(1);
+    }
+
+    // Read in cash amount returned
+    if((amt=read(sockfd, &cashReturned, sizeof(float))) != sizeof(float)){
+        printf("%s request_cash failed to read cashReturned\n.", clientStr);
+        printf("It read %d bytes\n.", amt);
+        exit(1);
+    }
+
+    // Update the global cash variable
+    cash += cashReturned;
+}
+
+// logic for handling a TRANSACT request
 void transact(int sockfd, int accountNumber, float val){
     printf("%s Transact request\n", clientStr);
-    // send a GET_BALANCE message to the server to ensure
-    // that the account will not go negative
-    // get_balance(sockfd, accountNumber);
 
-    // send REQUEST_CASH to server until the cash variable 
-    // (include/client.h) will not go negative
-    // while(cash < val){
+    // Send a REQUEST_CASH message to server until we have enough money on hand for the transaction
+    while(cash < val){
+        request_cash(sockfd);
+    }
 
-    // }
+    // Integer to hold number of bytes read/written
+    int amt = 0;
+    
+    // Message to write to the socket
+    int msg = TRANSACT;
 
-    // send TRANSACTION to the server
+    // Variables to store the response
+    int rsp;
+    int retAccountNumber;
+    float retBalance;
+
+    // Write message type
+    if((amt=write(sockfd, &msg, sizeof(int))) != sizeof(int)){
+        printf("%s transact failed to write msg_type\n.", clientStr);
+        printf("It wrote %d bytes\n.", amt);
+        exit(1);
+    }
+    // Write account number
+    if((amt=write(sockfd, &accountNumber, sizeof(int))) != sizeof(int)){
+        printf("%s transact failed to write accountNumber\n.", clientStr);
+        printf("It wrote %d bytes\n.", amt);
+        exit(1);
+    }
+    // Write transaction amount
+    if((amt=write(sockfd, &val, sizeof(float))) != sizeof(float)){
+        printf("%s transact failed to write val\n.", clientStr);
+        printf("It wrote %d bytes\n.", amt);
+        exit(1);
+    }
+
+
+
+    // Read in response message type
+    if((amt=read(sockfd, &rsp, sizeof(int))) != sizeof(int)){
+        printf("%s transact failed to read rsp\n.", clientStr);
+        printf("It wrote %d bytes\n.", amt);
+        exit(1);
+    }
+    // What if we get wrong value back?
+    else if(rsp != BALANCE){
+        printf("%s transact received the wrong response type\n", clientStr);
+        exit(1);
+    }
+
+    // Read in the returned account number
+    if((amt=read(sockfd, &retAccountNumber, sizeof(int))) != sizeof(int)){
+        printf("%s transact failed to read retAccountNumber\n.", clientStr);
+        printf("It wrote %d bytes\n.", amt);
+        exit(1);
+    }
+    // Read in the returned balance
+    if((amt=read(sockfd, &retBalance, sizeof(float))) != sizeof(float)){
+        printf("%s transact failed to read retBalance\n.", clientStr);
+        printf("It wrote %d bytes\n.", amt);
+        exit(1);
+    }
 
     // add the value of the transaction to the cash
-    // variable (deposites increase, withdrawls decrease)
+    // variable (deposits increase, withdrawals decrease)
+    cash -= val;
 
     // NOTE: make sure to use proper error handling
 }
@@ -171,6 +264,8 @@ void transact(int sockfd, int accountNumber, float val){
 // logic for sending GET_BALANCE request
 void get_balance(int sockfd, int accountNumber){
     printf("%s Get_balance request\n", clientStr);
+
+    // Integer to hold number of bytes read/written
     int amt = 0;
 
     // Variable to write to socket
@@ -179,7 +274,7 @@ void get_balance(int sockfd, int accountNumber){
     // Variables to store response
     int rsp;
     int retAccountNumber;
-    int balance;
+    float balance;
 
     // Write message type
     if((amt=write(sockfd, &msg, sizeof(int))) != sizeof(int)){
@@ -195,38 +290,33 @@ void get_balance(int sockfd, int accountNumber){
     }
 
 
+
     // Read in response message type
-    if((amt=write(sockfd, &rsp, sizeof(int))) != sizeof(int)){
+    if((amt=read(sockfd, &rsp, sizeof(int))) != sizeof(int)){
         printf("%s get_balance failed to read rsp\n.", clientStr);
         printf("It wrote %d bytes\n.", amt);
         exit(1);
     }
     // What if we get wrong value back?
     else if(rsp != BALANCE){
-        printf("%s get_balance received the wrong response type\n");
+        printf("%s get_balance received the wrong response type\n", clientStr, rsp);
         exit(1);
     }
 
     // Get returned account number
-    if((amt=read(sock_fd, &retAccountNumber, sizeof(int))) != sizeof(INT_MAX)){
+    if((amt=read(sockfd, &retAccountNumber, sizeof(int))) != sizeof(int)){
         printf("%s get_balance failed to read retAccountNumber\n.", clientStr);
         printf("It read %d bytes\n.", amt);
         exit(1);
     }
     // Get returned balance
-    if((amt=read(sock_fd, &balance, sizeof(int))) != sizeof(INT_MAX)){
+    if((amt=read(sockfd, &balance, sizeof(float))) != sizeof(float)){
         printf("%s get_balance failed to read balance\n.", clientStr);
         printf("It read %d bytes\n.", amt);
         exit(1);
     }
 
     printf("%s BALANCE for %d: %f\n", clientStr, retAccountNumber, balance);
-}
-
-// logic for sending REQUEST_CASH request
-void request_cash(int sockfd, float amount){
-    printf("Request_cash request\n");
-
 }
 
 // logic for sending ERROR
@@ -245,17 +335,17 @@ void terminate(int sockfd){
     int msg = TERMINATE;
 
     // Write TERMINATE message to server
-    if((amt=write(sock_fd, &msg_type, sizeof(int))) != sizeof(int)){
+    if((amt=write(sockfd, &msg, sizeof(int))) != sizeof(int)){
         printf("%s get_account_info failed to write msg_type\n.", clientStr);
         printf("It wrote %d bytes\n.", amt);
         exit(1);
     }
 }
 
-// logic for sending REQUEST_HISTORY
-void request_history(int sockfd, int accountNumber, int numTransactions){
-    printf("Request_history request\n");
-}
+// // logic for sending REQUEST_HISTORY
+// void request_history(int sockfd, int accountNumber, int numTransactions){
+//     printf("Request_history request\n");
+// }
 
 void printSyntax(){
     printf("incorrect usage syntax! \n");
@@ -269,8 +359,9 @@ int main(int argc, char *argv[]){
         return 0;
     }
 
-    struct timespec start, end;
-    clock_gettime(CLOCK_REALTIME, &start);
+    struct timespec* start;
+    struct timespec* end;
+    clock_gettime(CLOCK_REALTIME, start);
 
     // Read in command-line arguments
     char* inputFileName = argv[1];
@@ -343,7 +434,7 @@ int main(int argc, char *argv[]){
         } else if(msg == GET_BALANCE){
             get_balance(sockfd, accountNumber);
         } else if(msg == REQUEST_CASH){
-            request_cash(sockfd, amount);
+            request_cash(sockfd);
         } else if(msg == ERROR){
             error(sockfd, msg);
         } else if(msg == TERMINATE){
@@ -367,7 +458,7 @@ int main(int argc, char *argv[]){
     }
 
     // Print out elapsed time
-    clock_gettime(CLOCK_REALTIME, &end);
+    clock_gettime(CLOCK_REALTIME, end);
     float timeDiff = (end->tv_sec - start->tv_sec) + 1e-9*(end->tv_nsec - start->tv_nsec);
     printf("Elapsed Time: %.2f\n", timeDiff);
 
