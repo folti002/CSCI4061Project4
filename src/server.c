@@ -12,6 +12,8 @@ void registerAccount(int connfd){
         printf("%s ERROR: max account number reached", serverStr);
         return;
     }
+
+    // Variable to store amount of bytes read/written
     int amt = 0;
 
     // Set up variables to be read in from socket
@@ -39,8 +41,6 @@ void registerAccount(int connfd){
         printf("It read %d bytes\n.", amt);
         exit(1);
     }
-
-    //printf("%s Received %s, %s, %ld\n", serverStr, username, name, birthday);
 
     // Lock the shared balance structures
     pthread_mutex_lock(&balancesSizeLock);
@@ -75,7 +75,7 @@ void registerAccount(int connfd){
         exit(1);
     }
 
-    // Increment size of balances structure and unlock shared data
+    // Unlock account, increment size of balances array, then unlock shared balancesSize variable
     pthread_mutex_unlock(&balances[balancesSize].accountLock);
     balancesSize++;
     pthread_mutex_unlock(&balancesSizeLock);
@@ -85,6 +85,7 @@ void registerAccount(int connfd){
 void accountInfo(int connfd){
     printf("%s Account_info protocol\n", serverStr);
 
+    // Variable to store amount of bytes read/written
     int amt = 0;
 
     // Variable to store account number sent by client
@@ -142,12 +143,80 @@ void accountInfo(int connfd){
 void handleTransaction(int connfd){
     printf("%s Transfer protocol\n", serverStr);
     
+    // Variable to store amount of bytes read/written
+    int amt = 0;
+
+    // Variables to hold information read in from client
+    int accountNumber;
+    float amount;
+
+    // Get accountNumber from client
+    if((amt=read(connfd, &accountNumber, sizeof(int))) != sizeof(int)){
+        printf("%s handleTransaction failed to read accountNumber\n.", serverStr);
+        printf("It read %d bytes\n.", amt);
+        exit(1);
+    }
+    // Get transaction amount from client
+    if((amt=read(connfd, &amount, sizeof(float))) != sizeof(float)){
+        printf("%s handleTransaction failed to read amount\n.", serverStr);
+        printf("It read %d bytes\n.", amt);
+        exit(1);
+    }
+
+    // Check if we have a valid accountNumber
+    if(accountNumber > balancesSize || accountNumber < 0){
+        printf("%s Invalid account number inputted! Continuing...\n", serverStr);
+        return;
+    }
+
+
+
+
+    // Lock the current account while editing
+    pthread_mutex_lock(&balances[accountNumber].accountLock);
+
+    // Check if we have enough money for the transaction
+    if(balances[accountNumber].balance - amount < 0){
+        // If not enough money, send an ERROR message to client
+        printf("%s Not enough money to complete transaction! Sending error message...\n", serverStr);
+        error(connfd);
+        return;
+    }
+
+    // If we do have enough money, complete the transaction
+    balances[accountNumber].balance -= amount;
+
+    // Return BALANCE message to client
+    int msg = BALANCE;
+
+    // Write message type
+    if((amt=write(connfd, &msg, sizeof(int))) != sizeof(int)){
+        printf("%s handleTransaction failed to write msg\n.", serverStr);
+        printf("It wrote %d bytes\n.", amt);
+        exit(1);
+    }
+    // Write account number
+    if((amt=write(connfd, &accountNumber, sizeof(int))) != sizeof(int)){
+        printf("%s handleTransaction failed to write accountNumber\n.", serverStr);
+        printf("It wrote %d bytes\n.", amt);
+        exit(1);
+    }
+    // Write balance
+    if((amt=write(connfd, &(balances[accountNumber].balance), sizeof(float))) != sizeof(float)){
+        printf("%s handleTransaction failed to write balance\n.", serverStr);
+        printf("It wrote %d bytes\n.", amt);
+        exit(1);
+    }
+
+    // Unlock the current account
+    pthread_mutex_unlock(&balances[accountNumber].accountLock);
 }
 
 // Logic for sending BALANCE
 void balanceHandler(int connfd){
     printf("%s Balance protocol\n", serverStr);
 
+    // Variable to store amount of bytes read/written
     int amt = 0;
 
     // Variable to store account number sent by client
@@ -198,17 +267,63 @@ void balanceHandler(int connfd){
 // Logic for sending CASH
 void cash(int connfd){
     printf("%s Cash protocol\n", serverStr);
+
+    // Variable to hold number of bytes read/written
+    int amt = 0;
+
+    // Variable to store cash requested
+    float cashRequested;
+
+    // Read in cash amount requested from client
+    if((amt=read(connfd, &cashRequested, sizeof(float))) != sizeof(float)){
+        printf("%s cash failed to read cashReturned\n.", serverStr);
+        printf("It read %d bytes\n.", amt);
+        exit(1);
+    }
+
+
+
+    // Return CASH message to client
+    int msg = CASH;
+
+    // Return CASH_AMOUNT to the client
+    float cashReturned = CASH_AMOUNT;
+
+    // Write CASH message first
+    // Write message type
+    if((amt=write(connfd, &msg, sizeof(int))) != sizeof(int)){
+        printf("%s cash failed to write msg_type\n.", serverStr);
+        printf("It wrote %d bytes\n.", amt);
+        exit(1);
+    }
+    // Return cash to client
+    if((amt=write(connfd, &cashReturned, sizeof(float))) != sizeof(float)){
+        printf("%s cash failed to write cashRequest\n.", serverStr);
+        printf("It wrote %d bytes\n.", amt);
+        exit(1);
+    }
 }
 
-// Logic for sending ERROR
+// Logic for sending an ERROR message
 void error(int connfd){
     printf("%s Error protocol\n", serverStr);
+
+    // Variable to hold number of bytes read/written
+    int amt = 0;
+
+    // Send ERROR message to client
+    int msg = ERROR;
+    if((amt=write(connfd, &msg, sizeof(int))) != sizeof(int)){
+        printf("%s error failed to write msg_type\n.", serverStr);
+        printf("It wrote %d bytes\n.", amt);
+        exit(1);
+    }
 }
 
-// Logic for sending HISTORY
-void history(int connfd){
-    printf("%s History protocol\n", serverStr);
-}
+// // Logic for sending HISTORY
+// void history(int connfd){
+//     printf("%s History protocol\n", serverStr);
+// }
 
 void printSyntax(){
     printf("incorrect usage syntax! \n");

@@ -140,7 +140,7 @@ void transact(int sockfd, int accountNumber, float val){
     printf("%s Transact request\n", clientStr);
     // send a GET_BALANCE message to the server to ensure
     // that the account will not go negative
-    // get_balance(sockfd, accountNumber);
+    
 
     // send REQUEST_CASH to server until the cash variable 
     // (include/client.h) will not go negative
@@ -151,7 +151,7 @@ void transact(int sockfd, int accountNumber, float val){
     // send TRANSACTION to the server
 
     // add the value of the transaction to the cash
-    // variable (deposites increase, withdrawls decrease)
+    // variable (deposits increase, withdrawals decrease)
 
     // NOTE: make sure to use proper error handling
 }
@@ -213,7 +213,7 @@ void get_balance(int sockfd, int accountNumber){
 }
 
 // logic for sending REQUEST_CASH request
-void request_cash(int sockfd, float amount){
+void request_cash(int sockfd){
     printf("Request_cash request\n");
 
     // Integer to hold number of bytes read/written
@@ -235,7 +235,7 @@ void request_cash(int sockfd, float amount){
     }
     // Write argument for message type
     if((amt=write(sockfd, &cashRequest, sizeof(float))) != sizeof(float)){
-        printf("%s request_cash failed to write accountNumber\n.", clientStr);
+        printf("%s request_cash failed to write cashRequest\n.", clientStr);
         printf("It wrote %d bytes\n.", amt);
         exit(1);
     }
@@ -255,7 +255,14 @@ void request_cash(int sockfd, float amount){
     }
 
     // Read in cash amount returned
-    
+    if((amt=read(sockfd, &cashReturned, sizeof(float))) != sizeof(float)){
+        printf("%s request_cash failed to read cashReturned\n.", clientStr);
+        printf("It read %d bytes\n.", amt);
+        exit(1);
+    }
+
+    // Update the global cash variable
+    cash += cashReturned;
 }
 
 // logic for sending ERROR
@@ -281,10 +288,10 @@ void terminate(int sockfd){
     }
 }
 
-// logic for sending REQUEST_HISTORY
-void request_history(int sockfd, int accountNumber, int numTransactions){
-    printf("Request_history request\n");
-}
+// // logic for sending REQUEST_HISTORY
+// void request_history(int sockfd, int accountNumber, int numTransactions){
+//     printf("Request_history request\n");
+// }
 
 void printSyntax(){
     printf("incorrect usage syntax! \n");
@@ -373,7 +380,7 @@ int main(int argc, char *argv[]){
         } else if(msg == GET_BALANCE){
             get_balance(sockfd, accountNumber);
         } else if(msg == REQUEST_CASH){
-            request_cash(sockfd, amount);
+            request_cash(sockfd);
         } else if(msg == ERROR){
             error(sockfd, msg);
         } else if(msg == TERMINATE){
