@@ -84,16 +84,115 @@ void registerAccount(int connfd){
 // Logic for sending ACCOUNT_INFO
 void accountInfo(int connfd){
     printf("%s Account_info protocol\n", serverStr);
+
+    int amt = 0;
+
+    // Variable to store account number sent by client
+    int accountNumber;
+
+    // Get accountNumber from client
+    if((amt=read(connfd, &accountNumber, sizeof(int))) != sizeof(int)){
+        printf("%s accountInfo failed to read accountNumber\n.", serverStr);
+        printf("It read %d bytes\n.", amt);
+        exit(1);
+    }
+
+    // Check if valid accountNumber
+    if(accountNumber > balancesSize || accountNumber < 0){
+        printf("%s Invalid account number inputted! Continuing...\n", serverStr);
+        return;
+    }
+
+    // Lock the current account while editing
+    pthread_mutex_lock(&balances[accountNumber].accountLock);
+
+    // Return BALANCE message to client
+    int msg = ACCOUNT_INFO;
+
+    // Write message type
+    if((amt=write(connfd, &msg, sizeof(int))) != sizeof(int)){
+        printf("%s accountinfo failed to write msg\n.", serverStr);
+        printf("It wrote %d bytes\n.", amt);
+        exit(1);
+    }
+    // Send username
+    if((amt=write(connfd, balances[accountNumber].username, sizeof(char)*MAX_STR)) != sizeof(char)*MAX_STR){
+        printf("%s accountInfo failed to write username\n.", serverStr);
+        printf("It wrote %d bytes\n.", amt);
+        exit(1);
+    }
+    // Send name
+    if((amt=write(connfd, balances[accountNumber].name, sizeof(char)*MAX_STR)) != sizeof(char)*MAX_STR){
+        printf("%s accountInfo failed to write name\n.", serverStr);
+        printf("It wrote %d bytes\n.", amt);
+        exit(1);
+    }
+    // Send birthday
+    if((amt=write(connfd, &balances[accountNumber].birthday, sizeof(time_t))) != sizeof(time_t)){
+        printf("%s accountInfo failed to write birthday\n.", serverStr);
+        printf("It wrote %d bytes\n.", amt);
+        exit(1);
+    }
+
+    // Unlock the current account
+    pthread_mutex_unlock(&balances[accountNumber].accountLock);
 }
 
 // Logic for handling a TRANSACT request
-void transact(int connfd){
+void handleTransaction(int connfd){
     printf("%s Transfer protocol\n", serverStr);
+    
 }
 
 // Logic for sending BALANCE
 void balanceHandler(int connfd){
     printf("%s Balance protocol\n", serverStr);
+
+    int amt = 0;
+
+    // Variable to store account number sent by client
+    int accountNumber;
+
+    // Get accountNumber from client
+    if((amt=read(connfd, &accountNumber, sizeof(int))) != sizeof(int)){
+        printf("%s balanceHandler failed to read accountNumber\n.", serverStr);
+        printf("It read %d bytes\n.", amt);
+        exit(1);
+    }
+
+    // Check if valid accountNumber
+    if(accountNumber > balancesSize || accountNumber < 0){
+        printf("%s Invalid account number inputted! Continuing...\n", serverStr);
+        return;
+    }
+
+    // Lock the current account while editing
+    pthread_mutex_lock(&balances[accountNumber].accountLock);
+
+    // Return BALANCE message to client
+    int msg = BALANCE;
+
+    // Write message type
+    if((amt=write(connfd, &msg, sizeof(int))) != sizeof(int)){
+        printf("%s balanceHandler failed to write msg\n.", serverStr);
+        printf("It wrote %d bytes\n.", amt);
+        exit(1);
+    }
+    // Write account number
+    if((amt=write(connfd, &accountNumber, sizeof(int))) != sizeof(int)){
+        printf("%s balanceHandler failed to write accountNumber\n.", serverStr);
+        printf("It wrote %d bytes\n.", amt);
+        exit(1);
+    }
+    // Write balance for this customer (will be 0.0 because this account was just inititalized)
+    if((amt=write(connfd, &(balances[accountNumber].balance), sizeof(float))) != sizeof(float)){
+        printf("%s balanceHandler failed to write balance\n.", serverStr);
+        printf("It wrote %d bytes\n.", amt);
+        exit(1);
+    }
+
+    // Unlock the account we were just accessing
+    pthread_mutex_unlock(&balances[accountNumber].accountLock);
 }
 
 // Logic for sending CASH
@@ -151,7 +250,7 @@ void* requestHandler(void* connfd){
         } else if(msg == GET_ACCOUNT_INFO){
             accountInfo(connectionfd);
         } else if(msg == TRANSACT){
-            transact(connectionfd);
+            handleTransaction(connectionfd);
         } else if(msg == GET_BALANCE){
             balanceHandler(connectionfd);
         } else if(msg == REQUEST_CASH){

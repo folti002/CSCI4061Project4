@@ -2,18 +2,6 @@
 
 #define SA struct sockaddr
 
-/*
-CLIENT NEEDS TO SEND:
-REGISTER (0)
-GET_ACCOUNT_INFO (1)
-TRANSACT (2)
-GET_BALANCE (3)
-REQUEST_CASH (6)
-ERROR (8) - sent when client receives an unexpected response from the server. After sending this message to server, clients close the connection. 
-TERMINATE (9) : Sending this message type (4 bytes) without any additional data
-REQUEST_HISTORY (10)
-*/
-
 // logic for sending REGISTER request
 void registerRequest(int sockfd, char username[MAX_STR], char name[MAX_STR], time_t birthday){
     printf("%s Register request\n", clientStr);
@@ -147,7 +135,7 @@ void get_account_info(int sock_fd, int accountNumber){
     printf("%s Name: %s, Username: %s, Birthday: %ld\n", clientStr, name, username, birthday);
 }
 
-// logic for handling TRANSACT
+// logic for handling a TRANSACT request
 void transact(int sockfd, int accountNumber, float val){
     printf("%s Transact request\n", clientStr);
     // send a GET_BALANCE message to the server to ensure
@@ -195,15 +183,16 @@ void get_balance(int sockfd, int accountNumber){
     }
 
 
+
     // Read in response message type
-    if((amt=write(sockfd, &rsp, sizeof(int))) != sizeof(int)){
+    if((amt=read(sockfd, &rsp, sizeof(int))) != sizeof(int)){
         printf("%s get_balance failed to read rsp\n.", clientStr);
         printf("It wrote %d bytes\n.", amt);
         exit(1);
     }
     // What if we get wrong value back?
     else if(rsp != BALANCE){
-        printf("%s get_balance received the wrong response type\n", clientStr);
+        printf("%s get_balance received the wrong response type\n", clientStr, rsp);
         exit(1);
     }
 
@@ -227,6 +216,46 @@ void get_balance(int sockfd, int accountNumber){
 void request_cash(int sockfd, float amount){
     printf("Request_cash request\n");
 
+    // Integer to hold number of bytes read/written
+    int amt = 0;
+
+    // Variables to write to socket
+    int msg = REQUEST_CASH;
+    float cashRequest = CASH_AMOUNT;
+    
+    // Variables to store response
+    int rsp;
+    float cashReturned;
+
+    // Write message type
+    if((amt=write(sockfd, &msg, sizeof(int))) != sizeof(int)){
+        printf("%s request_cash failed to write msg_type\n.", clientStr);
+        printf("It wrote %d bytes\n.", amt);
+        exit(1);
+    }
+    // Write argument for message type
+    if((amt=write(sockfd, &cashRequest, sizeof(float))) != sizeof(float)){
+        printf("%s request_cash failed to write accountNumber\n.", clientStr);
+        printf("It wrote %d bytes\n.", amt);
+        exit(1);
+    }
+
+
+
+    // Read in response message type
+    if((amt=read(sockfd, &rsp, sizeof(int))) != sizeof(int)){
+        printf("%s request_cash failed to read rsp\n.", clientStr);
+        printf("It wrote %d bytes\n.", amt);
+        exit(1);
+    }
+    // What if we get wrong value back?
+    else if(rsp != CASH){
+        printf("%s request_cash received the wrong response type\n", clientStr, rsp);
+        exit(1);
+    }
+
+    // Read in cash amount returned
+    
 }
 
 // logic for sending ERROR
