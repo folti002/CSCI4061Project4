@@ -2,12 +2,9 @@
 
 #define SA struct sockaddr
 
-account_t* balances;
-int balancesSize = 0;
-pthread_mutex_t balancesSizeLock = PTHREAD_MUTEX_INITIALIZER;
-
 // Logic for registering an account
 void registerAccount(int connfd){
+    // Check if we still have room to add more accounts
     if(balancesSize == MAX_ACC){
         printf("%s ERROR: max account number reached", serverStr);
         return;
@@ -83,8 +80,6 @@ void registerAccount(int connfd){
 
 // Logic for sending ACCOUNT_INFO
 void accountInfo(int connfd){
-    //printf("%s Account_info protocol\n", serverStr);
-
     // Variable to store amount of bytes read/written
     int amt = 0;
 
@@ -141,8 +136,6 @@ void accountInfo(int connfd){
 
 // Logic for sending an ERROR message
 void error(int connfd){
-    //printf("%s Error protocol\n", serverStr);
-
     // Variable to hold number of bytes read/written
     int amt = 0;
 
@@ -157,8 +150,6 @@ void error(int connfd){
 
 // Logic for handling a TRANSACT request
 void handleTransaction(int connfd){
-    //printf("%s Transfer protocol\n", serverStr);
-    
     // Variable to store amount of bytes read/written
     int amt = 0;
 
@@ -193,7 +184,7 @@ void handleTransaction(int connfd){
     // Check if we have enough money for the transaction
     if(balances[accountNumber].balance < (-amount)){
         // If not enough money, send an ERROR message to client
-        printf("%s Not enough money to complete transaction! Sending error message...\n", serverStr);
+        //printf("%s Not enough money to complete transaction! Sending error message...\n", serverStr);
         error(connfd);
         pthread_mutex_unlock(&balances[accountNumber].accountLock);
         return;
@@ -230,8 +221,6 @@ void handleTransaction(int connfd){
 
 // Logic for sending BALANCE
 void balanceHandler(int connfd){
-    //printf("%s Balance protocol\n", serverStr);
-
     // Variable to store amount of bytes read/written
     int amt = 0;
 
@@ -282,8 +271,6 @@ void balanceHandler(int connfd){
 
 // Logic for sending CASH
 void cash(int connfd){
-    //printf("%s Cash protocol\n", serverStr);
-
     // Variable to hold number of bytes read/written
     int amt = 0;
 
@@ -347,7 +334,9 @@ void* logThread(){
     }
 }
 
+// Manages which function gets control based on messages taken in from client
 void* requestHandler(void* connfd){
+    // Set up variables to be used
     int size = 0;
     int msg;
     int connectionfd = *((int*) connfd);
@@ -360,6 +349,7 @@ void* requestHandler(void* connfd){
             exit(1);
         }
 
+        // Depending on message type, hand over control to corresponding function
         if(msg == REGISTER){
             registerAccount(connectionfd);
         } else if(msg == GET_ACCOUNT_INFO){
@@ -371,7 +361,7 @@ void* requestHandler(void* connfd){
         } else if(msg == REQUEST_CASH){
             cash(connectionfd);
         } else if(msg == ERROR){    
-            // FOR NOW DO NOTHING
+            // Ignore error messages
             continue;
         } else if(msg == TERMINATE){
             close(connectionfd);
@@ -409,6 +399,7 @@ int main(int argc, char *argv[]){
     pthread_t tid;
     pthread_create(&tid, NULL, logThread, NULL);
 
+    // Initialize all locks in the global balances array
     for(int i = 0; i < MAX_ACC; i++){
         balances[i].accountLock = (pthread_mutex_t) PTHREAD_MUTEX_INITIALIZER;
     }

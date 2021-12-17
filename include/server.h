@@ -3,14 +3,7 @@
 
 #include "utils.h"
 
-// skeleton of a struct to hold account information
-// this should contain information passed with each 
-// new account that is registered (see REGISTER in 
-// the writeup...)
-// 
-// add any other fields you feel are necessary to 
-// for implementing the extra credit history or
-// for maintaining synchronization among threads
+// Account struct to store all information for an account in the bank system
 typedef struct account
 {
   int accountNumber;
@@ -21,12 +14,17 @@ typedef struct account
   pthread_mutex_t accountLock;
 } account_t;
 
-// array of structs to store account information
-// struct account balances[MAX_ACC];
-// ALT: you may declare it as a pointer and malloc
-// struct account * balances;
+// Global balances array structure (will be malloc'd in server.c)
+account_t* balances;
+// Global integer to hold size of balances array currently
+int balancesSize = 0;
+// Global lock to protect the current size of the balances array
+pthread_mutex_t balancesSizeLock = PTHREAD_MUTEX_INITIALIZER;
 
+
+// String to print before all prints in server
 char* serverStr = "(SERVER)";
+// Log file name
 char* logFileName = "output/balances.csv";
 
 void printSyntax();

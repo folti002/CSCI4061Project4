@@ -2,9 +2,8 @@
 
 #define SA struct sockaddr
 
-// logic for sending REGISTER request
+// Logic for sending REGISTER request
 void registerRequest(int sockfd, char username[MAX_STR], char name[MAX_STR], time_t birthday){
-    //printf("%s Register request\n", clientStr);
     // Hold number of bytes read/written
     int amt = 0;
     // Message type written to socket
@@ -63,12 +62,11 @@ void registerRequest(int sockfd, char username[MAX_STR], char name[MAX_STR], tim
         exit(1);
     }
 
-    printf("%s Balance after registering %d: %f\n", clientStr, accountNumber, balance);
+    //printf("%s Balance after registering %d: %f\n", clientStr, accountNumber, balance);
 }
 
-// logic for sending GET_ACCOUNT_INFO request 
+// Logic for sending GET_ACCOUNT_INFO request 
 void get_account_info(int sock_fd, int accountNumber){
-    //printf("%s Get_account_info request\n", clientStr);
     // Integer to hold number of bytes read/written
     int amt = 0;
 
@@ -135,10 +133,8 @@ void get_account_info(int sock_fd, int accountNumber){
     printf("%s Name: %s, Username: %s, Birthday: %ld\n", clientStr, name, username, birthday);
 }
 
-// logic for sending REQUEST_CASH request
+// Logic for sending REQUEST_CASH request
 void request_cash(int sockfd){
-    //printf("Request_cash request\n");
-
     // Integer to hold number of bytes read/written
     int amt = 0;
 
@@ -186,16 +182,14 @@ void request_cash(int sockfd){
 
     // Update the global cash variable
     cash += cashReturned;
-    printf("%s New cash balance after request: %f\n", clientStr, cash);
+    //printf("%s New cash balance after request: %f\n", clientStr, cash);
 }
 
-// logic for handling a TRANSACT request
+// Logic for handling a TRANSACT request
 void transact(int sockfd, int accountNumber, float val){
-    printf("%s Transact request\n", clientStr);
-
     // Send a REQUEST_CASH message to server until we have enough money on-hand for the transaction
     while(cash < val){
-        printf("%s Requesting cash\n", clientStr);
+        //printf("%s Requesting cash\n", clientStr);
         request_cash(sockfd);
     }
 
@@ -238,7 +232,7 @@ void transact(int sockfd, int accountNumber, float val){
     }
     // What if we get an error response back?
     else if(rsp == ERROR){
-        printf("%s Transaction could not be completed! Continuing...\n", clientStr);
+        //printf("%s Transaction could not be completed! Continuing...\n", clientStr);
         return;
     }
     // What if we get wrong value back?
@@ -260,19 +254,17 @@ void transact(int sockfd, int accountNumber, float val){
         exit(1);
     }
 
-    printf("%s Balance after transaction for %d: %f\n", clientStr, retAccountNumber, retBalance);
+    //printf("%s Balance after transaction for %d: %f\n", clientStr, retAccountNumber, retBalance);
 
     // add the value of the transaction to the cash
     // variable (deposits increase, withdrawals decrease)
     cash -= val;
 
-    printf("%s On-hand cash after transaction: %f\n", clientStr, cash);
+    //printf("%s On-hand cash after transaction: %f\n", clientStr, cash);
 }
 
-// logic for sending GET_BALANCE request
+// Logic for sending GET_BALANCE request
 void get_balance(int sockfd, int accountNumber){
-    //printf("%s Get_balance request\n", clientStr);
-
     // Integer to hold number of bytes read/written
     int amt = 0;
 
@@ -324,18 +316,27 @@ void get_balance(int sockfd, int accountNumber){
         exit(1);
     }
 
-    printf("%s BALANCE for %d: %f\n", clientStr, retAccountNumber, balance);
+    //printf("%s BALANCE for %d: %f\n", clientStr, retAccountNumber, balance);
 }
 
-// logic for sending ERROR
+// Logic for sending ERROR (THIS IS NEVER CALLED)
 void error(int sockfd, int msgType){
-    printf("Error message\n");
+    // Integer to hold number of bytes read/written
+    int amt = 0;
+
+    // Variable to write to the socket
+    int msg = ERROR;
+
+    // Write ERROR message to server
+    if((amt=write(sockfd, &msg, sizeof(int))) != sizeof(int)){
+        printf("%s error failed to write msg_type\n.", clientStr);
+        printf("It wrote %d bytes\n.", amt);
+        exit(1);
+    }
 }
 
-// logic for sending TERMINATE
+// Logic for sending TERMINATE
 void terminate(int sockfd){
-    //printf("Terminate request\n");
-
     // Integer to hold number of bytes read/written
     int amt = 0;
 
@@ -344,17 +345,18 @@ void terminate(int sockfd){
 
     // Write TERMINATE message to server
     if((amt=write(sockfd, &msg, sizeof(int))) != sizeof(int)){
-        printf("%s get_account_info failed to write msg_type\n.", clientStr);
+        printf("%s terminate failed to write msg_type\n.", clientStr);
         printf("It wrote %d bytes\n.", amt);
         exit(1);
     }
 }
 
-// // logic for sending REQUEST_HISTORY
-// void request_history(int sockfd, int accountNumber, int numTransactions){
-//     printf("Request_history request\n");
-// }
+// Logic for sending REQUEST_HISTORY - not implemented (extra credit)
+void request_history(int sockfd, int accountNumber, int numTransactions){
+    printf("Request_history request\n");
+}
 
+// Let user know the correct syntax for command-line args
 void printSyntax(){
     printf("incorrect usage syntax! \n");
     printf("usage: $ ./client input_filename server_addr server_port\n");
@@ -367,9 +369,9 @@ int main(int argc, char *argv[]){
         return 0;
     }
 
-    struct timespec* start;
-    struct timespec* end;
-    clock_gettime(CLOCK_REALTIME, start);
+    // Start clock before running everything
+    clock_t time;
+    time = clock();
 
     // Read in command-line arguments
     char* inputFileName = argv[1];
@@ -408,6 +410,7 @@ int main(int argc, char *argv[]){
 
     // Read from input file
     while((nread = getLineFromFile(fp, line, len)) != -1) {
+        // If there is currently no connection, then connect to the server
         if(noConnection){
             // Create socket and validate
             sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -428,8 +431,9 @@ int main(int argc, char *argv[]){
             noConnection = 0;
         }
 
+        // Read a line from the input file and store the values
         sscanf(line, "%d,%d,%[^,],%[^,],%ld,%f,%d", &msg, &accountNumber, name, username, &birthday, &amount, &numTransactions);
-        printf("%d,%d,%s,%s,%ld,%f,%d\n", msg, accountNumber, name, username, birthday, amount, numTransactions);
+        //printf("%d,%d,%s,%s,%ld,%f,%d\n", msg, accountNumber, name, username, birthday, amount, numTransactions);
 
         // Depending on which command was read in, make request to server
         if(msg == REGISTER){
@@ -449,8 +453,9 @@ int main(int argc, char *argv[]){
             close(sockfd);
             noConnection = 1;
         } else if(msg == REQUEST_HISTORY){
+            // Extra credit portion of project not implemented
             continue;
-            //request_history(sockfd, accountNumber, numTransactions);
+            request_history(sockfd, accountNumber, numTransactions);
         } else {
             printf("%s Invalid message type read. Continuing...\n", clientStr);
             continue;
@@ -466,9 +471,8 @@ int main(int argc, char *argv[]){
     }
 
     // Print out elapsed time
-    clock_gettime(CLOCK_REALTIME, end);
-    float timeDiff = (end->tv_sec - start->tv_sec) + 1e-9*(end->tv_nsec - start->tv_nsec);
-    printf("Elapsed Time: %.2f\n", timeDiff);
+    float timeTaken = ((float) time / CLOCKS_PER_SEC);
+    printf("Elapsed Time: %.2f\n", timeTaken);
 
     // Free up variables
     free(line);

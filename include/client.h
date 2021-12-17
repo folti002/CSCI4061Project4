@@ -3,8 +3,10 @@
 
 #include "utils.h"
 
-// track the cash available to service transactions
+// Track the cash available to service transactions
 float cash = START_CASH;
+
+// String to print before all prints in client
 char* clientStr = "(CLIENT)";
 
 void printSyntax();
