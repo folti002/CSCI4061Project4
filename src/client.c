@@ -1,3 +1,8 @@
+// test machine: csel-kh1250-01.cselabs.umn.edu
+// group number: G[27]
+// names: Reed Fazenbaker, Mikkel Folting
+// x500: fazen007, folti002
+
 #include "client.h"
 
 #define SA struct sockaddr
@@ -51,11 +56,13 @@ void registerRequest(int sockfd, char username[MAX_STR], char name[MAX_STR], tim
         printf("%s register recieved wrong rsp_type %d\n", clientStr, rsp_type);
         exit(1);
     }
+    // Get the account number
     if((amt=read(sockfd, &accountNumber, sizeof(int))) != sizeof(int)){
         printf("%s register failed to read accountNumber\n.", clientStr);
         printf("It read %d bytes\n.", amt);
         exit(1);
     }
+    // Get the returned balances
     if((amt=read(sockfd, &balance, sizeof(float))) != sizeof(float)){
         printf("%s register failed to read balance\n.", clientStr);
         printf("It read %d bytes\n.", amt);
@@ -79,9 +86,7 @@ void get_account_info(int sock_fd, int accountNumber){
     char username[MAX_STR];
     time_t birthday;
     
-    // Using read and write aren't the best "real world" call
-    // but will be the simplest for you to use
-    //
+
     // Write the message type first
     if((amt=write(sock_fd, &msg_type, sizeof(int))) != sizeof(int)){
         printf("%s get_account_info failed to write msg_type\n.", clientStr);
@@ -97,9 +102,7 @@ void get_account_info(int sock_fd, int accountNumber){
     
 
 
-    // Read in the response message type first
-    // As this tells us what fields we will need
-    // To read afterwards and their types
+    // Read in response message type
     if((amt=read(sock_fd, &rsp_type, sizeof(int))) != sizeof(int)){
         printf("%s get_account_info failed to read rsp_type\n.", clientStr);
         printf("It read %d bytes\n.", amt);
@@ -130,7 +133,7 @@ void get_account_info(int sock_fd, int accountNumber){
         exit(1);
     }
 
-    printf("%s Name: %s, Username: %s, Birthday: %ld\n", clientStr, name, username, birthday);
+    //printf("%s Name: %s, Username: %s, Birthday: %ld\n", clientStr, name, username, birthday);
 }
 
 // Logic for sending REQUEST_CASH request
@@ -182,6 +185,7 @@ void request_cash(int sockfd){
 
     // Update the global cash variable
     cash += cashReturned;
+
     //printf("%s New cash balance after request: %f\n", clientStr, cash);
 }
 
@@ -256,8 +260,7 @@ void transact(int sockfd, int accountNumber, float val){
 
     //printf("%s Balance after transaction for %d: %f\n", clientStr, retAccountNumber, retBalance);
 
-    // add the value of the transaction to the cash
-    // variable (deposits increase, withdrawals decrease)
+    // Add the value of the transaction to the cash variable of the client
     cash -= val;
 
     //printf("%s On-hand cash after transaction: %f\n", clientStr, cash);

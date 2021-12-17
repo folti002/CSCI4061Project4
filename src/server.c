@@ -1,3 +1,8 @@
+// test machine: csel-kh1250-01.cselabs.umn.edu
+// group number: G[27]
+// names: Reed Fazenbaker, Mikkel Folting
+// x500: fazen007, folti002
+
 #include "server.h"
 
 #define SA struct sockaddr
@@ -293,7 +298,6 @@ void cash(int connfd){
     float cashReturned = CASH_AMOUNT;
 
     // Write CASH message first
-    // Write message type
     if((amt=write(connfd, &msg, sizeof(int))) != sizeof(int)){
         printf("%s cash failed to write msg_type\n.", serverStr);
         printf("It wrote %d bytes\n.", amt);
@@ -307,11 +311,12 @@ void cash(int connfd){
     }
 }
 
-// // Logic for sending HISTORY
-// void history(int connfd){
-//     printf("%s History protocol\n", serverStr);
-// }
+// Logic for sending HISTORY
+void history(int connfd){
+    printf("%s History protocol\n", serverStr);
+}
 
+// Let user know the correct syntax for command-line args
 void printSyntax(){
     printf("incorrect usage syntax! \n");
     printf("usage: $ ./server server_addr server_port num_workers\n");
@@ -446,8 +451,6 @@ int main(int argc, char *argv[]){
     }
     len = sizeof(cli);
 
-    // FOR INTERIM SOLUTION
-    pthread_t pid;
 
     // Continue accepting clients forever until launcher kills server.c
     while(1){
